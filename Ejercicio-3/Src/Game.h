@@ -39,6 +39,6 @@ public:
 	void DrawGame();
 	void UpdatePhysics();
 	void DoEvents();
-	void SetZoom();
+	void SetZoom(float ratio);
 };
 
