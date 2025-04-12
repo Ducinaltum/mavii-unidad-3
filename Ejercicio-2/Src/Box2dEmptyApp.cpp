@@ -8,7 +8,7 @@ int _tmain(int argc, _TCHAR* argv[])
 {
     // Crear el objeto de la clase Game
     Game* Juego;
-    Juego = new Game(800, 600, "Esqueleto de Aplicación - MAVII");
+    Juego = new Game(800, 600, "Ejercicio 2");
     Juego->Loop(); // Ejecutar el bucle principal del juego
 
     return 0; // Retorna 0 indicando que el programa se ha ejecutado correctamente

@@ -23,7 +23,11 @@ private:
 	int fps;
 
 	// Cuerpo de box2d
-	b2Body* controlBody;
+	b2Body* controlBody1;
+	b2Body* controlBody2;
+	b2Body* draggedBody;
+
+	bool wasMousePressed = false;
 
 public:
 
@@ -39,6 +43,6 @@ public:
 	void DrawGame();
 	void UpdatePhysics();
 	void DoEvents();
-	void SetZoom();
+	void SetZoom(float ratio);
 };
 
