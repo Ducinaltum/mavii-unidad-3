@@ -115,7 +115,7 @@ void Game::InitPhysics()
 
 	// Crear el suelo y las paredes estáticas del mundo físico
 	b2Body* groundBody = Box2DHelper::CreateRectangularStaticBody(phyWorld, 133, 10);
-	groundBody->SetTransform(b2Vec2(50.0f, 100.0f), 0.0f);
+	groundBody->SetTransform(b2Vec2(133.0/2.0f, 100.0f), 0.0f);
 
 	b2Body* leftWallBody = Box2DHelper::CreateRectangularStaticBody(phyWorld, 10, 100);
 	leftWallBody->SetTransform(b2Vec2(0.0f, 50.0f), 0.0f);
