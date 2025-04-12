@@ -22,6 +22,8 @@ private:
 	float frameTime;
 	int fps;
 
+	float force;
+
 	// Cuerpo de box2d
 	b2Body* controlBody;
 
@@ -39,6 +41,6 @@ public:
 	void DrawGame();
 	void UpdatePhysics();
 	void DoEvents();
-	void SetZoom();
+	void SetZoom(float ratio);
 };
 
