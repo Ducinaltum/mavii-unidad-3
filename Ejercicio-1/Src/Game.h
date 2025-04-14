@@ -22,8 +22,11 @@ private:
 	float frameTime;
 	int fps;
 
-	// Cuerpo de box2d
-	b2Body* controlBody;
+	Vector2f ballPosition;
+	Vector2f ballVelocity;
+	float ballRadious;
+	float ballHardness;
+
 
 public:
 

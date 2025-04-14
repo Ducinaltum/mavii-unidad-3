@@ -3,8 +3,9 @@
 #include <iostream>
 
 // Constructor de la clase Game
-Game::Game(int ancho, int alto, std::string titulo)
+Game::Game(int ancho, int alto, std::string titulo) : ballPosition(75, 50), ballVelocity(0, 0)
 {
+	srand(NULL);
 	// Inicialización de la ventana y configuración de propiedades
 	wnd = new RenderWindow(VideoMode(ancho, alto), titulo);
 	wnd->setVisible(true);
@@ -12,7 +13,11 @@ Game::Game(int ancho, int alto, std::string titulo)
 	wnd->setFramerateLimit(fps);
 	frameTime = 1.0f / fps;
 	SetZoom((float)ancho / (float)alto); // Configuración de la vista del juego
-	InitPhysics(); // Inicialización del motor de física
+	
+	ballVelocity.x = ((rand() % 20) + 20);
+	ballVelocity.y = ((rand() % 20) + 20);
+	ballRadious = 5;
+	ballHardness = 20.0f;
 }
 
 // Bucle principal del juego
@@ -32,36 +37,73 @@ void Game::Loop()
 // Actualización de la simulación física
 void Game::UpdatePhysics()
 {
-	phyWorld->Step(frameTime, 8, 8); // Simular el mundo físico
-	phyWorld->ClearForces(); // Limpiar las fuerzas aplicadas a los cuerpos
-	phyWorld->DebugDraw(); // Dibujar el mundo físico para depuración
+	//Ley de hook
+	//F = -k*l
+	//k = dureza del resorte
+	//l = desplazamiento desde la posición de equilibrio a la punta del resorte
+	//	Que tan apretada está la bola
+
+	Vector2f l_Vector(0, 0);
+	float lx = (ballPosition.x + ballRadious) - 120;
+	if (lx > 0) {
+		l_Vector.x = lx;
+	}
+
+	lx = (ballPosition.x - ballRadious) - 5;
+	if (lx < 0) {
+		l_Vector.x = lx;
+	}
+
+	float ly = (ballPosition.y) - 80;
+	if (ly > 0) {
+		l_Vector.y = ly;
+	}
+
+	ly = (ballPosition.y - ballRadious) - 5;
+	if (ly < 0) {
+		l_Vector.y = ly;
+	}
+
+	float fx = -ballHardness * l_Vector.x;
+	ballVelocity.x += (fx * frameTime);
+
+	float fy = -ballHardness * l_Vector.y;
+	ballVelocity.y += (fy * frameTime);
+
+	ballPosition += ballVelocity * frameTime;
 }
 
 // Dibujo de los elementos del juego
 void Game::DrawGame()
 {
+	// Dibujar el cuerpo de control (círculo)
+	sf::CircleShape controlShape(ballRadious);
+	controlShape.setFillColor(sf::Color::Magenta);
+	controlShape.setPosition(ballPosition);
+	wnd->draw(controlShape);
+
 	// Dibujar el suelo
 	sf::RectangleShape groundShape(sf::Vector2f(500, 5));
 	groundShape.setFillColor(sf::Color::Red);
 	groundShape.setPosition(0, 95);
 	wnd->draw(groundShape);
 
+	// Dibujar el suelo
+	sf::RectangleShape ceilShape(sf::Vector2f(500, 5));
+	ceilShape.setFillColor(sf::Color::Red);
+	ceilShape.setPosition(0, 0);
+	wnd->draw(ceilShape);
+
 	// Dibujar las paredes
-	sf::RectangleShape leftWallShape(sf::Vector2f(10, alto)); // Alto de la ventana
+	sf::RectangleShape leftWallShape(sf::Vector2f(5, 100));
 	leftWallShape.setFillColor(sf::Color::Blue);
-	leftWallShape.setPosition(100, 0); // X = 100 para que comience donde termina el suelo
+	leftWallShape.setPosition(0, 0); // X = 100 para que comience donde termina el suelo
 	wnd->draw(leftWallShape);
 
-	sf::RectangleShape rightWallShape(sf::Vector2f(10, alto)); // Alto de la ventana
+	sf::RectangleShape rightWallShape(sf::Vector2f(5, 100)); // Alto de la ventana
 	rightWallShape.setFillColor(sf::Color::Cyan);
-	rightWallShape.setPosition(90, 0); // X = 90 para que comience donde termina el suelo
+	rightWallShape.setPosition(129, 0); // X = 90 para que comience donde termina el suelo
 	wnd->draw(rightWallShape);
-
-	// Dibujar el cuerpo de control (círculo)
-	sf::CircleShape controlShape(5);
-	controlShape.setFillColor(sf::Color::Magenta);
-	controlShape.setPosition(controlBody->GetPosition().x - 5, controlBody->GetPosition().y - 5);
-	wnd->draw(controlShape);
 }
 
 // Procesamiento de eventos de entrada
@@ -75,31 +117,12 @@ void Game::DoEvents()
 		case Event::Closed:
 			wnd->close(); // Cerrar la ventana si se presiona el botón de cerrar
 			break;
-		case Event::MouseButtonPressed:
-			// Crear un cuerpo dinámico triangular en la posición del ratón
-			b2Body* body = Box2DHelper::CreateTriangularDynamicBody(phyWorld, b2Vec2(0.0f, 0.0f), 10.0f, 1.0f, 4.0f, 0.1f);
-			// Transformar las coordenadas según la vista activa
-			Vector2f pos = wnd->mapPixelToCoords(Vector2i(evt.mouseButton.x, evt.mouseButton.y));
-			body->SetTransform(b2Vec2(pos.x, pos.y), 0.0f);
-			break;
 		}
 	}
 
-	// Controlar el movimiento del cuerpo de control con el teclado
-	// Segun la numeracion usada, cuando mas cerca de cero mas 
-	// lento es el desplazamiento sobre ese eje
-	controlBody->SetAwake(true);
-	if (Keyboard::isKeyPressed(Keyboard::Left))
-		controlBody->SetLinearVelocity(b2Vec2(-30.0f, 0.0f));
-	if (Keyboard::isKeyPressed(Keyboard::Right))
-		controlBody->SetLinearVelocity(b2Vec2(30.0f, 0.0f));
-	if (Keyboard::isKeyPressed(Keyboard::Down))
-		controlBody->SetLinearVelocity(b2Vec2(0.0f, 30.0f));
-	if (Keyboard::isKeyPressed(Keyboard::Up))
-		controlBody->SetLinearVelocity(b2Vec2(0.0f, -30.0f));
+
 }
 
-// Comprobación de colisiones (a implementar más adelante)
 void Game::CheckCollitions()
 {
 	// Implementación de la comprobación de colisiones
@@ -117,33 +140,7 @@ void Game::SetZoom(float ratio)
 }
 
 // Inicialización del motor de física y los cuerpos del mundo físico
-void Game::InitPhysics()
-{
-	// Inicializar el mundo físico con la gravedad por defecto
-	phyWorld = new b2World(b2Vec2(0.0f, 9.8f));
-
-	// Crear un renderer de debug para visualizar el mundo físico
-	debugRender = new SFMLRenderer(wnd);
-	debugRender->SetFlags(UINT_MAX);
-	phyWorld->SetDebugDraw(debugRender);
-
-	// Crear el suelo y las paredes estáticas del mundo físico
-	b2Body* groundBody = Box2DHelper::CreateRectangularStaticBody(phyWorld, 100, 10);
-	groundBody->SetTransform(b2Vec2(50.0f, 100.0f), 0.0f);
-
-	b2Body* leftWallBody = Box2DHelper::CreateRectangularStaticBody(phyWorld, 10, 100);
-	leftWallBody->SetTransform(b2Vec2(0.0f, 50.0f), 0.0f);
-
-	b2Body* rightWallBody = Box2DHelper::CreateRectangularStaticBody(phyWorld, 10, 100);
-	rightWallBody->SetTransform(b2Vec2(100.0f, 50.0f), 0.0f);
-
-	// Crear un círculo que se controlará con el teclado
-	controlBody = Box2DHelper::CreateCircularDynamicBody(phyWorld, 5, 1.0f, 0.5, 0.1f);
-	controlBody->SetTransform(b2Vec2(50.0f, 50.0f), 0.0f);
-}
+void Game::InitPhysics() {}
 
 // Destructor de la clase
-
-Game::~Game(void)
-{
-}
+Game::~Game(void) {}
