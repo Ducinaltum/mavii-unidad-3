@@ -3,6 +3,7 @@
 #include <SFML/System.hpp>
 #include "SFMLRenderer.h"
 #include <list>
+#include "RagDoll.h";
 
 using namespace sf;
 class Game
@@ -22,8 +23,7 @@ private:
 	float frameTime;
 	int fps;
 
-	// Cuerpo de box2d
-	b2Body* controlBody;
+	RagDoll* ragDoll;
 
 public:
 
@@ -39,6 +39,6 @@ public:
 	void DrawGame();
 	void UpdatePhysics();
 	void DoEvents();
-	void SetZoom();
+	void SetZoom(float ratio);
 };
 
